@@ -7,7 +7,7 @@ def load_audio_file(wav_path: str, sample_rate: int = 32000):
 
 
 def split_files_into_chunks(waveform: np.ndarray, sample_rate: int, length: float, overlap: float) -> list[np.ndarray]:
-    segment_desired_length = length * sample_rate
+    segment_desired_length = int(length * sample_rate)
     hop_len = int(segment_desired_length * (1 - overlap))
     if hop_len <= 0:
         hop_len = segment_desired_length

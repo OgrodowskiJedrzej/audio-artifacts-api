@@ -7,7 +7,7 @@ def check_model(onnx_model_path: str) -> bool:
 
 
 def load_model(onnx_model_path: str) -> None:
-    model = ort.InferenceSession(onnx_model_path)
+    model = ort.InferenceSession(onnx_model_path, providers=["CPUExecutionProvider"])
     return model
 
 
