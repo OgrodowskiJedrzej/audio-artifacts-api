@@ -1,8 +1,11 @@
 import numpy as np
 import librosa
+import io
 
-def load_audio_file(wav_path: str, sample_rate: int = 32000):
-    wavefile, _ = librosa.load(wav_path, sr=sample_rate)
+async def load_audio_file(file, sample_rate: int = 32000):
+    file_bytes = await file.read()
+    wavefile, _ = librosa.load(io.BytesIO(
+        file_bytes), sr=sample_rate, mono=True)
     return wavefile
 
 
