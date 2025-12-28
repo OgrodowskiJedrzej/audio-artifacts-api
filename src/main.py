@@ -1,63 +1,60 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 import numpy as np
+import logging
+from pydantic import BaseModel
+from fastapi.concurrency import run_in_threadpool
 
 from audio_utils import split_files_into_chunks, load_audio_file
-from utils import load_model, softmax
-from pydantic import BaseModel    
+from utils import load_model
 
-class PredictResponse(BaseModel):
-    predicted_class: int
-    confidence: float
-    triggered_at: float | None
+import logging
 
+logger = logging.getLogger(__name__)
 
 model = {}
+
+class Input(BaseModel):
+    input_url: UploadFile
+
+class Output(BaseModel):
+    filename: str
+    predicted_class: int
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     model["model"] = load_model(onnx_model_path="models/wavegram_logmel.onnx")
-    print("Model loaded.")
-    # await some starting actions
+    logger.debug("Model loaded.")
     yield
-    # cleanup
     
 app = FastAPI(lifespan=lifespan)
 
-@app.get("/predict", response_model=PredictResponse)
-async def predict(audio_path: str, threshold: float = 0.5):
+@app.get("/health")
+def health_check():
+    return {"status" : "ok"}
 
-    session = model["model"]
-
-    waveform = load_audio_file(audio_path)
-
+def predict(input, session) -> int:
     chunks = split_files_into_chunks(
-        waveform,
+        input,
         sample_rate=32000,
         length=5.,
         overlap=0.1
     )
-
-    if len(chunks) == 0:
-        return PredictResponse(
-            predicted_class=0,
-            confidence=0.0,
-            triggered_at=None
-        )
     for chunk in chunks:
-        chunk = chunk[None, :]
-        logits = session.run(None, {"waveform": chunk})[0]
-        probs = softmax(logits)
-        artifact_probs = probs[:, 1]
-        max_idx = int(np.argmax(artifact_probs))
-        max_conf = float(artifact_probs[max_idx])
-        if max_conf >= threshold:
-            return PredictResponse(
-                predicted_class=1,
-                confidence=max_conf,
-            )
+            chunk = chunk[None, :]
+            logits = session.run(None, {"waveform": chunk})[0]
+            predicted_class = int(np.argmax(logits, axis=1)[0])
+            if predicted_class == 1:
+                return 1
+    return 0
 
-    return PredictResponse(
-        predicted_class=0,
-        confidence=float(np.max(probs[:, 0])),
+
+@app.post("/inference/file", response_model=Output)
+async def inference_file(file: UploadFile = File(...)):
+    session = model["model"]
+    waveform = await load_audio_file(file)
+    prediction = predict(waveform, session)
+    return Output(
+        filename=file.filename,
+        predicted_class=prediction
     )
