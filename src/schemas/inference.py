@@ -8,4 +8,4 @@ class InferenceInputSchema(BaseModel):
 
 class InferenceOutputSchema(BaseModel):
     filename: str
-    predicted_class: int
+    predicted_class: str

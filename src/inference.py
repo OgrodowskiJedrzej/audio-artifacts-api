@@ -3,7 +3,7 @@ import numpy as np
 from audio_utils import split_files_into_chunks
 
 
-def predict(input: np.ndarray, model) -> int:
+def predict(input: np.ndarray, model) -> str:
     """Run prediction on waveform file.
 
     Args:
@@ -23,5 +23,5 @@ def predict(input: np.ndarray, model) -> int:
         logits = model.run(None, {"waveform": chunk})[0]
         predicted_class = int(np.argmax(logits, axis=1)[0])
         if predicted_class == 1:
-            return 1
-    return 0
+            return "artifact"
+    return "no_artifact"
