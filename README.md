@@ -3,6 +3,8 @@
 A **machine learning inference API** for classifying audio artifacts in hearing aid test recordings.
 Provides programmatic access for automated detection, visualization, and report generation, and integrates with external systems such as the Audio Precision API.
 
+Model training was performed [here](https://github.com/OgrodowskiJedrzej/audio-artifacts-classification?tab=readme-ov-file).
+
 ---
 
 ## Table of Contents
