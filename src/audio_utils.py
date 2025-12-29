@@ -1,13 +1,16 @@
+import io
+
 import numpy as np
 import librosa
-import io
+
+from src.utils import normalize_input
 
 
 async def load_audio_file(file, sample_rate: int = 32000):
     """Load an .wav file, resample it and convert to mono."""
     file_bytes = await file.read()
     wavefile, _ = librosa.load(io.BytesIO(file_bytes), sr=sample_rate, mono=True)
-    return wavefile
+    return normalize_input(wavefile)
 
 
 def split_files_into_chunks(waveform: np.ndarray, sample_rate: int, length: float, overlap: float) -> list[np.ndarray]:
@@ -29,6 +32,13 @@ def split_files_into_chunks(waveform: np.ndarray, sample_rate: int, length: floa
         hop_len = segment_desired_length
 
     chunks = []
+    if waveform.shape[0] < segment_desired_length:
+        return [
+            np.pad(
+                waveform,
+                (0, segment_desired_length - waveform.shape[0]),
+            )
+        ]
     for start in range(0, max(0, waveform.shape[0] - segment_desired_length + 1), hop_len):
         chunk = waveform[start : start + segment_desired_length]
         if chunk.shape[0] < segment_desired_length:
