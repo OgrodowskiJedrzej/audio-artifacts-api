@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
 import logging
 
-from utils import load_model
-from api.v1.router import router
+from fastapi import FastAPI
+
+from src.utils import load_model
+from src.api.v1.router import router
 
 logger = logging.getLogger(__name__)
 

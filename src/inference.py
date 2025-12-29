@@ -1,6 +1,6 @@
 import numpy as np
 
-from audio_utils import split_files_into_chunks
+from src.audio_utils import split_files_into_chunks
 
 
 def predict(input: np.ndarray, model) -> str:
@@ -16,8 +16,10 @@ def predict(input: np.ndarray, model) -> str:
         input,
         sample_rate=32000,
         length=5.0,
-        overlap=0.1,
+        overlap=0.0,
     )
+    if not chunks:
+        return "unknown"
     for chunk in chunks:
         chunk = chunk[None, :]
         logits = model.run(None, {"waveform": chunk})[0]

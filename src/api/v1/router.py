@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api.v1.inference import router as inference_router
+from src.api.v1.inference import router as inference_router
 
 router = APIRouter()
 
