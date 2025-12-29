@@ -1,6 +1,6 @@
 import numpy as np
 
-from audio_utils import split_files_into_chunks
+from src.audio_utils import split_files_into_chunks
 
 
 def predict(input: np.ndarray, model) -> str:

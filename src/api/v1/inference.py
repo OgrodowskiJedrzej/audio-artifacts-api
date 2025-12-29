@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Request, HTTPException
-from schemas.inference import InferenceOutputSchema
-from inference import predict
-from audio_utils import load_audio_file
+from src.schemas.inference import InferenceOutputSchema
+from src.inference import predict
+from src.audio_utils import load_audio_file
 
 router = APIRouter()
 
