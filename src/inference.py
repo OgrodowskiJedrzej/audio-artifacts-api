@@ -16,7 +16,7 @@ def predict(input: np.ndarray, model) -> str:
         input,
         sample_rate=32000,
         length=5.0,
-        overlap=0.0,
+        overlap=0.1,
     )
     if not chunks:
         return "unknown"

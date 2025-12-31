@@ -22,4 +22,6 @@ app.include_router(router, prefix="/api/v1")
 
 @app.get("/health")
 def health_check():
+    if not hasattr(app.state, "model"):
+        return {"status": "unhealthy"}
     return {"status": "ok"}
