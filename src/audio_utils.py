@@ -2,14 +2,41 @@ import io
 
 import numpy as np
 import librosa
+from fastapi import HTTPException
 
-from src.utils import normalize_input
+MAX_DURATION: float = 30.0
+
+
+def normalize_input(waveform):
+    input = waveform.astype(np.float32)
+    if np.max(np.abs(input)) > 0:
+        input = input / np.max(np.abs(input))
+    return input
 
 
 async def load_audio_file(file, sample_rate: int = 32000):
-    """Load an .wav file, resample it and convert to mono."""
+    """Load a waveform file, resample to `sample_rate`, convert to mono and normalize.
+
+    Parameters:
+        file: An async file-like object coroutine (e.g., FastAPI UploadFile). Uploaded file should be waveform.
+        sample_rate: Target sample rate in Hz. Defaults to 32000.
+
+    Returns:
+        1-D float32 ndarray containing the normalized waveform sampled at `sample_rate`.
+    """
     file_bytes = await file.read()
-    wavefile, _ = librosa.load(io.BytesIO(file_bytes), sr=sample_rate, mono=True)
+
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Empty file uploaded.")
+
+    try:
+        wavefile, _ = librosa.load(io.BytesIO(file_bytes), sr=sample_rate, mono=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Audio decoding failed, check file format.") from e
+
+    if (duration := len(wavefile) / sample_rate) > MAX_DURATION:
+        raise HTTPException(status_code=413, detail=f"Audio too long ({duration:.2f}s > {MAX_DURATION}s).")
+
     return normalize_input(wavefile)
 
 
