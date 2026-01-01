@@ -13,6 +13,7 @@ def normalize_input(waveform):
         input = input / np.max(np.abs(input))
     return input
 
+
 async def load_audio_file(file, sample_rate: int = 32000):
     """Load a waveform file, resample to `sample_rate`, convert to mono and normalize.
 
@@ -30,9 +31,9 @@ async def load_audio_file(file, sample_rate: int = 32000):
 
     try:
         wavefile, _ = librosa.load(io.BytesIO(file_bytes), sr=sample_rate, mono=True)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Audio decoding failed, check file format.")
-    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Audio decoding failed, check file format.") from e
+
     if (duration := len(wavefile) / sample_rate) > MAX_DURATION:
         raise HTTPException(status_code=413, detail=f"Audio too long ({duration:.2f}s > {MAX_DURATION}s).")
 

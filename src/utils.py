@@ -25,13 +25,10 @@ def load_model(onnx_model_path: str) -> ort.InferenceSession:
 
     try:
         onnx.checker.check_model(onnx_model_path, full_check=True)
-        return ort.InferenceSession(
-            onnx_model_path,
-            providers=["CPUExecutionProvider"]
-        )
-    except Exception:
+        return ort.InferenceSession(onnx_model_path, providers=["CPUExecutionProvider"])
+    except Exception as e:
         logger.exception("Failed to load ONNX model")
-        raise RuntimeError("Model failed to load")
+        raise RuntimeError("Model failed to load") from e
 
 
 def softmax(logits):
