@@ -37,6 +37,9 @@ cd audio-artifacts-api
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 
+# Run script to download model locally
+./setup_locally.sh
+
 # Install dependencies
 uv sync
 
