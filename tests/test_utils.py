@@ -1,3 +1,4 @@
+import os
 import pytest
 import onnx
 import onnxruntime as ort
@@ -7,6 +8,8 @@ from src.utils import load_model
 
 def test_load_model_success(monkeypatch):
     """Model passes check and InferenceSession is created."""
+
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
 
     # Mock onnx.checker.check_model to succeed
     monkeypatch.setattr(
@@ -32,7 +35,9 @@ def test_load_model_success(monkeypatch):
 
 
 def test_load_model_checker_failure(monkeypatch):
-    """Model check fails and an exception is raised."""
+    """Model check fails and error is wrapped."""
+
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
 
     def mock_check_model(*args, **kwargs):
         raise RuntimeError("ONNX model validation failed")
@@ -43,12 +48,17 @@ def test_load_model_checker_failure(monkeypatch):
         mock_check_model,
     )
 
-    with pytest.raises(RuntimeError, match="ONNX model validation failed"):
+    with pytest.raises(RuntimeError, match="Model failed to load") as exc:
         load_model("invalid.onnx")
+
+    assert isinstance(exc.value.__cause__, RuntimeError)
+    assert "ONNX model validation failed" in str(exc.value.__cause__)
 
 
 def test_load_model_inference_session_failure(monkeypatch):
-    """ONNX check passes but InferenceSession creation fails."""
+    """InferenceSession creation fails and error is wrapped."""
+
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
 
     monkeypatch.setattr(
         onnx.checker,
@@ -65,5 +75,8 @@ def test_load_model_inference_session_failure(monkeypatch):
         mock_inference_session,
     )
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="Model failed to load") as exc:
         load_model("dummy.onnx")
+
+    assert isinstance(exc.value.__cause__, RuntimeError)
+    assert "Failed to create session" in str(exc.value.__cause__)
